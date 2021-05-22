@@ -1,23 +1,31 @@
 ﻿using System;
+using System.IO;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace DotnetGenerate
 {
+    [HelpOption]
     public class Program
     {
-        private readonly IConsole _console;
+        public static void Main(string[] args)
+            => CommandLineApplication.Execute<Program>(args);
 
-        public Program(IConsole console)
+        [Argument(0, Description = "The sort of file you want to generate. Supported types, you can use the short hand in square brackets: class [c], interface [i], enum [e]")]
+        public string Schematic { get; set; }
+
+        [Option("-d|--dry-run", Description = "Run through and reports activity without writing out results")]
+        public bool DryRun { get; set; } = false;
+
+        [Option("-f|--force", Description = "Force overwriting of existing files")]
+        public bool Force { get; set; } = false;
+
+        private int OnExecute(CommandLineApplication application)
         {
-            if (console == null)
-                throw new ArgumentNullException();
+            DirectoryInfo directory = new DirectoryInfo(Environment.CurrentDirectory);
 
-            _console = console;
-        }
+            
 
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
+            return 0;
         }
     }
 }
