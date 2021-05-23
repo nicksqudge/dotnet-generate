@@ -6,19 +6,36 @@ namespace DotnetGenerate.Tests
 {
     public class PathHandlerTests
     {
-        [Theory]
-        [InlineData("/Test/", "TestName", "/Test/", "TestName.cs")]
-        // [InlineData("/Test/", "testDir/TestName", "/Test/testDir/", "TestName.cs")]
-        // [InlineData("/Test/", "../something", "/", "Something.cs")]
-        // [InlineData("\\Test\\", "testDir/TestName", "\\Test\\testDir\\", "TestName.cs")]
-        // [InlineData("/Test/", "testDir\\something", "/Test/testDir/", "Something.cs")]
-        public void CheckGeneration(string startingDir, string userInput, string expectedDir, string expectedName)
+        [Fact]
+        public void ProjectLivesInWorkingDirectoryAddSingleFile()
         {
-            var pathHandler = new PathHandler(startingDir, userInput);
-            pathHandler.Generate();
+            var path = new PathGenerator()
+                .SetCurrentWorkingDirectory("C:/Repos/TestProject/")
+                .SetProjectPath("C:/Repos/TestProject/TestProject.csproj")
+                .SetNamespace("TestProject")
+                .SetUserInput("SomeClass")
+                .Generate();
 
-            pathHandler.Directory.Should().Be(expectedDir);
-            pathHandler.FileName.Should().Be(expectedName);
+            path.Namespace.Should().Be("TestProject");
+            path.FullFilePath.Should().Be("C:/Repos/TestProject/SomeClass.cs");
+            path.FileName.Should().Be("SomeClass.cs");
+            path.DisplayPath.Should().Be("./SomeClass.cs");
         }
+
+        // Child folder with namespace defined
+
+        // Double child folder with namespace defined
+
+        // Child folder with no namespace defined
+
+        // Double child folder with no namespace defined
+
+        // Use ../
+
+        // Use ./ when in a child directory
+
+        // No project path could be found
+
+        // Test for interfaces
     }
 }
