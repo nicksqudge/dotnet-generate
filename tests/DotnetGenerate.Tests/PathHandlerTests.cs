@@ -40,25 +40,84 @@ namespace DotnetGenerate.Tests
 
             result.RelativePath.Should().Be("./Child/AnotherExample.cs");
             result.FullPath.Should().Be("/Test/TestProject/Child/AnotherExample.cs");
-            result.NameSpace.Should().Be("TestProject.Child");
+            result.Namespace.Should().Be("TestProject.Child");
         }
-        
-        // Create a file in a root of cwd which is not the root of the project
 
-        // Child folder with namespace defined
+        [Fact]
+        public void CreateFileWithDoubleFolders()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .Run("Child1/Child2/Batman.cs");
 
-        // Double child folder with namespace defined
+            result.RelativePath.Should().Be("./Child1/Child2/Batman.cs");
+            result.FullPath.Should().Be("/Test/TestProject/Child1/Child2/Batman.cs");
+            result.Namespace.Should().Be("TestProject.Child1.Child2");
+        }
 
-        // Child folder with no namespace defined
+        [Fact]
+        public void ProvideNamespaceForPath()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .SetNamespace("DotnetGen")
+                .Run("Example");
 
-        // Double child folder with no namespace defined
+            result.RelativePath.Should().Be("./Example.cs");
+            result.FullPath.Should().Be("/Test/TestProject/Example.cs");
+            result.Namespace.Should().Be("DotnetGen");
+        }
 
-        // Use ../
+        [Fact]
+        public void ProvideNamespaceForChildFolders()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .SetNamespace("DotnetGen")
+                .Run("Shotgun/Something");  
 
-        // Use ./ when in a child directory
+            result.RelativePath.Should().Be("./Shotgun/Something.cs");
+            result.FullPath.Should().Be("/Test/TestProject/Shotgun/Something.cs");
+            result.Namespace.Should().Be("DotnetGen.Shotgun");
+        }
 
-        // No project path could be found
+        [Fact]
+        public void AddInRelativePath()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .SetCurrentWorkingDir("/Test/TestProject/Something")
+                .Run("../Team/Example");
 
-        // Test for interfaces
+            result.RelativePath.Should().Be("./Team/Example.cs");
+            result.FullPath.Should().Be("/Test/TestProject/Team/Example.cs");
+            result.Namespace.Should().Be("TestProject.Team");
+        }
+
+        [Fact]
+        public void AddInExtraRelativePath()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .SetCurrentWorkingDir("/Test/TestProject/Dawn/Of/The/Dead")
+                .Run("../../Team/Example");
+
+            result.RelativePath.Should().Be("./Dawn/Of/Team/Example.cs");
+            result.FullPath.Should().Be("/Test/TestProject/Dawn/Of/Team/Example.cs");
+            result.Namespace.Should().Be("TestProject.Dawn.Of.Team");
+        }
+
+        [Fact]
+        public void UseRelativePathWhenNotInProjectRoot()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .SetCurrentWorkingDir("/Test/TestProject/Love/Is/Love")
+                .Run("./RootTest");
+
+            result.RelativePath.Should().Be("./RootTest.cs");
+            result.FullPath.Should().Be("/Test/TestProject/RootTest.cs");
+            result.Namespace.Should().Be("TestProject");
+        }
     }
 }
