@@ -7,19 +7,24 @@ namespace DotnetGenerate
 {
     public class PathHandler
     {
-        private string _projectPath = string.Empty;
         private string _projectDirectory = string.Empty;
         private string _nameSpaceStartName = string.Empty;
         private string _currentWorkingDir = string.Empty;
+        private Func<string, string> _fileNameTransformer;
 
         public PathHandler SetProjectPath(string projectPath)
         {
-            _projectPath = projectPath;
             _projectDirectory = Path.GetDirectoryName(projectPath) + "/";
 
             if (_nameSpaceStartName.HasValue() == false)
                 _nameSpaceStartName = Path.GetFileNameWithoutExtension(projectPath);
 
+            return this;
+        }
+
+        public PathHandler SetFileNameTransform(Func<string, string> transformer)
+        {
+            _fileNameTransformer = transformer;
             return this;
         }
 
@@ -37,9 +42,6 @@ namespace DotnetGenerate
 
         public PathHandlerResult Run(string userInput)
         {
-            if (userInput.EndsWith(".cs") == false)
-                userInput += ".cs";
-
             string startingDirectory = _projectDirectory;
             if (_currentWorkingDir.HasValue())
                 startingDirectory = _currentWorkingDir;
@@ -92,7 +94,15 @@ namespace DotnetGenerate
                 fullPath = string.Join("/", result);
             }
 
-            return fullPath;
+            string directory = Path.GetDirectoryName(fullPath);
+            string fileName = Path.GetFileNameWithoutExtension(fullPath);
+
+            if (_fileNameTransformer != null)
+                fileName = _fileNameTransformer(fileName);
+            else
+                fileName += ".cs";
+
+            return Path.Combine(directory, fileName);
         }
 
         private string GenerateNameSpace(string relativePath)

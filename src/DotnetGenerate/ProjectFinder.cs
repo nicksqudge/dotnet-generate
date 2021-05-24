@@ -37,7 +37,7 @@ namespace DotnetGenerate
             }
             catch
             {
-                return projFile.Name;
+                return Path.GetFileNameWithoutExtension(projFile.Name);
             }
         }
 

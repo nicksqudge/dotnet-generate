@@ -119,5 +119,20 @@ namespace DotnetGenerate.Tests
             result.FullPath.Should().Be("/Test/TestProject/RootTest.cs");
             result.Namespace.Should().Be("TestProject");
         }
+
+        [Fact]
+        public void FileNameTransformer()
+        {
+            var result = new PathHandler()
+                .SetProjectPath("/Test/TestProject/TestProject.csproj")
+                .SetFileNameTransform((string input) => {
+                    return "NotTheOriginalFile.cs";
+                })
+                .Run("ExampleClass");
+
+            result.RelativePath.Should().Be("./NotTheOriginalFile.cs");
+            result.FullPath.Should().Be(@"/Test/TestProject/NotTheOriginalFile.cs");
+            result.Namespace.Should().Be("TestProject");
+        }
     }
 }
