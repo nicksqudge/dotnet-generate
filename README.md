@@ -1,7 +1,15 @@
 # dotnet-generate
 A .Net tool for generating files via the CLI to run similar to the way that the Angular CLI runs.
 
-`dotnet generate <schematic> <path> [options]`
+## Installation
+
+Run this command to install the [NuGet](https://www.nuget.org/packages/DotnetGenerate/) package to your global dotnet toolset:
+
+`dotnet tool install --global DotnetGenerate`
+
+## Run
+
+`generate <schematic> <path> [options]`
 
 The file will be created in the current working directory of where the console is running unless a more specific path is provided.
 
