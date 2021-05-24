@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>DotnetGenerate</id>
+
+        <version>1.0.0</version>
+
+        <authors>Nick Browne</authors>
+
+        <owners>nick.squdge</owners>
+        
+        <projectUrl>https://github.com/NickJBrowne/dotnet-generate</projectUrl>
+
+        <license type="file">LICENSE.txt</license>
+        
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+
+        <releaseNotes>Initial release</releaseNotes>
+
+        <description>A dotnet tool for generating files via the dotnet-cli</description>
+
+        <copyright>Copyright ©2021 Nick Browne</copyright>
+
+        <tags>dotnet cli generate</tags>
+        <dependencies>
+            <dependency id="McMaster.Extensions.CommandLineUtils" version="3.1.0" />
+        </dependencies>
+    </metadata>
+</package>

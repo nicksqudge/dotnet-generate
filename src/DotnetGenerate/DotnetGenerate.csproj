@@ -6,7 +6,13 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>generate</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <Description>A dotnet tool for generating files via the dotnet-cli</Description>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+      <None Include="LICENSE.txt" Pack="true" PackagePath=""/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
