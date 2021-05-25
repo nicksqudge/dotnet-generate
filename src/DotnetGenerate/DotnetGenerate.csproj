@@ -3,11 +3,14 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>dotnet-generate</AssemblyName>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>generate</ToolCommandName>
+    <ToolCommandName>dotnet-generate</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <Description>A dotnet tool for generating files via the dotnet-cli</Description>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Authors>Nick Browne</Authors>
+    <PackageProjectUrl>https://github.com/NickJBrowne/dotnet-generate</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
-        <id>DotnetGenerate</id>
+        <id>dotnet-generate</id>
 
-        <version>1.0.0</version>
+        <version>1.0</version>
 
         <authors>Nick Browne</authors>
 
