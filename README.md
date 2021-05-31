@@ -31,3 +31,7 @@ The file will be created in the current working directory of where the console i
 | `--static` | `-s` | Add the static modifier | bool | false |
 | `--inherits` | `-i` | Type the name of a type that you want this to inherit from | string | "" |
 | `--list` | `-ls` | Show a list of the currently supported schematics | bool | false |
+
+# Future Development
+
+[Go here for the roadmap of the project](https://trello.com/b/TYBhoSaF/dotnet-generate)
