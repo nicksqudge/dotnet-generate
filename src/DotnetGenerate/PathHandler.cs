@@ -14,7 +14,7 @@ namespace DotnetGenerate
 
         public PathHandler SetProjectPath(string projectPath)
         {
-            _projectDirectory = Path.GetDirectoryName(projectPath) + "/";
+            _projectDirectory = GetParentDirectory(projectPath) + "/";
 
             if (_nameSpaceStartName.HasValue() == false)
                 _nameSpaceStartName = Path.GetFileNameWithoutExtension(projectPath);
@@ -53,7 +53,7 @@ namespace DotnetGenerate
             }
 
             string fullPath = BuildFullPath(startingDirectory, userInput);
-            string projectParent = Path.GetDirectoryName(_projectDirectory) + "/";
+            string projectParent = GetParentDirectory(_projectDirectory) + "/";
             string relativePath = fullPath.Replace(projectParent, "./");
             string nameSpaceValue = GenerateNameSpace(relativePath);
 
@@ -68,7 +68,21 @@ namespace DotnetGenerate
         private string BuildFullPath(string startingDir, string userInput)
         {
             string fullPath = Path.Combine(startingDir, userInput);
+            fullPath = HandleDirectoryUpCharacter(fullPath);
 
+            string directory = GetParentDirectory(fullPath);
+            string fileName = Path.GetFileNameWithoutExtension(fullPath);
+
+            if (_fileNameTransformer != null)
+                fileName = _fileNameTransformer(fileName);
+            else
+                fileName += ".cs";
+
+            return Path.Combine(directory, fileName);
+        }
+
+        private string HandleDirectoryUpCharacter(string fullPath)
+        {
             if (fullPath.Contains("../"))
             {
                 var parts = SplitPath(fullPath).ToList();
@@ -91,24 +105,17 @@ namespace DotnetGenerate
                 }
 
                 result.Reverse();
-                fullPath = string.Join("/", result);
+                fullPath = JoinFilePath(result.ToArray());
             }
 
-            string directory = Path.GetDirectoryName(fullPath);
-            string fileName = Path.GetFileNameWithoutExtension(fullPath);
-
-            if (_fileNameTransformer != null)
-                fileName = _fileNameTransformer(fileName);
-            else
-                fileName += ".cs";
-
-            return Path.Combine(directory, fileName);
+            return fullPath;
         }
 
         private string GenerateNameSpace(string relativePath)
         {
             var nameSpaceBlocks = new List<string>();
-            SplitPath(Path.GetDirectoryName(relativePath))
+            string directory = GetParentDirectory(relativePath);
+            SplitPath(directory)
                 .ToList()
                 .ForEach(part =>
                 {
@@ -125,6 +132,15 @@ namespace DotnetGenerate
 
         private string[] SplitPath(string path)
             => path.Split(new string[] { "\\", "/" }, StringSplitOptions.None);
+
+        private string GetParentDirectory(string path)
+        {
+            var items = SplitPath(path).SkipLast(1);
+            return JoinFilePath(items.ToArray());
+        }
+
+        private string JoinFilePath(string[] path)
+            => string.Join("/", path);
     }
 
     public class PathHandlerResult

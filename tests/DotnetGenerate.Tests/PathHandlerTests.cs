@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics.X86;
 using System;
 using FluentAssertions;
 using Xunit;
@@ -133,6 +134,19 @@ namespace DotnetGenerate.Tests
             result.RelativePath.Should().Be("./NotTheOriginalFile.cs");
             result.FullPath.Should().Be(@"/Test/TestProject/NotTheOriginalFile.cs");
             result.Namespace.Should().Be("TestProject");
+        }
+
+        [Fact]
+        public void NamespaceNotCorrectBug()
+        {
+            var result = new PathHandler()
+                .SetProjectPath(@"E:\Repos\Worklog\Dependencies\Builders\Builders.csproj")
+                .SetNamespace("OpenApiBuilder")
+                .SetCurrentWorkingDir(@"E:\Repos\Worklog\Dependencies\Builders")
+                .Run("ExampleClass");
+                
+            result.Namespace.Should().Be("OpenApiBuilder");
+            result.RelativePath.Should().Be("./ExampleClass.cs");
         }
     }
 }
