@@ -15,7 +15,7 @@ namespace DotnetGenerate.Schematics
             return $"I{fileNameWithoutExtension}.cs";
         }
 
-        protected override string Template()
+        public override string Template()
         {
             return @"using System;
 

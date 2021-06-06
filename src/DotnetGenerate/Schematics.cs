@@ -1,3 +1,4 @@
+using System.IO;
 using System;
 using System.Collections.Generic;
 
@@ -16,17 +17,24 @@ namespace DotnetGenerate
 
         public abstract string Template();
 
-        public virtual int WriteFile(PathBuilder pathBuilder, FileWriteOptions fileWriteOptions, OpenCommandHandler openCommandHandler)
+        public virtual int WriteFile(PathBuilder pathBuilder, FileWriteOptions fileWriteOptions)
         {
             pathBuilder.SetFileNameTransform(TransformFileName);
 
+            var path = pathBuilder.Build();
+
+            string fileData = FileWriter.BuildFileData(
+                name: Path.GetFileNameWithoutExtension(path.FullPath),
+                namespaceValue: path.Namespace,
+                templateFileData: Template(),
+                fileWriteOptions
+            );
+
             return FileWriter.Write(
-                fileData: Template(),
-                schematicName: LongName,
-                visibility,
-                isAbstract,
-                isStatic,
-                inherits
+                path.FullPath,
+                fileData,
+                path.RelativePath,
+                fileWriteOptions
             );
         }
     }

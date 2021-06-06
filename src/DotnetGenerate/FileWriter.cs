@@ -1,3 +1,4 @@
+using System.Runtime.Serialization.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,78 +8,29 @@ namespace DotnetGenerate
 {
     public class FileWriter
     {
-        private PathBuilder _pathBuilder;
-        private Schematic _schematic;
-        private FileWriteOptions _fileWriteOptions;
-        private OpenCommandHandler _openCommand;
-
-        public FileWriter()
+        public static int Write(string filePath, string fileData, string fileDisplayName, FileWriteOptions fileWriteOptions)
         {
-            _fileWriteOptions = new FileWriteOptions();
+            if (fileWriteOptions.IsDryRun)
+                return DryRun(filePath, fileData, fileDisplayName, fileWriteOptions);
+            else
+                return WriteFile(filePath, fileData, fileDisplayName, fileWriteOptions);
         }
 
-        public FileWriter SetPathBuilder(PathBuilder pathBuilder)
+        public static string BuildFileData(string name, string namespaceValue, string templateFileData, FileWriteOptions fileWriteOptions)
         {
-            _pathBuilder = pathBuilder;
-            return this;
-        }
-
-        public FileWriter SetSchematic(Schematic schematic)
-        {
-            _schematic = schematic;
-            return this;
-        }
-
-        public FileWriter SetAbstract()
-        {
-            _fileWriteOptions.IsAbtract = true;
-            return this;
-        }
-
-        public FileWriter SetStatic()
-        {
-            _fileWriteOptions.IsStatic = true;
-            return this;
-        }
-
-        public FileWriter SetVisibility(string visibility)
-        {
-            _fileWriteOptions.Visibility = visibility;
-            return this;
-        }
-
-        public FileWriter SetDryRun()
-        {
-            _fileWriteOptions.IsDryRun = true;
-            return this;
-        }
-
-        public FileWriter SetOpenCommand(OpenCommandHandler openCommand)
-        {
-            _openCommand = openCommand;
-            return this;
-        }
-
-        public static int Write(
-            string fileData,
-            string schematicName,
-            PathBuilder pathHandler,
-            FileWriteOptions options
-        )
-        { 
             var variables = new Dictionary<string, string>();
-            variables.Add("name", Path.GetFileNameWithoutExtension(filePath));
+            variables.Add("name", name);
             variables.Add("namespace", namespaceValue);
 
             var modifiers = new List<string>();
 
-            if (visibility.HasValue())
-                modifiers.Add(visibility);
+            if (fileWriteOptions.Visibility.HasValue())
+                modifiers.Add(fileWriteOptions.Visibility);
 
-            if (isAbstract == true)
+            if (fileWriteOptions.IsAbtract)
                 modifiers.Add("abstract");
 
-            if (isStatic == true)
+            if (fileWriteOptions.IsStatic)
                 modifiers.Add("static");
 
             if (modifiers.Any() == false)
@@ -86,22 +38,74 @@ namespace DotnetGenerate
             else
                 variables.Add("modifiers", string.Join(" ", modifiers) + " ");
 
-            if (inherits.HasValue())
-                variables.Add("inherits", $" : {inherits}");
+            if (fileWriteOptions.Inherits.HasValue())
+                variables.Add("inherits", $" : {fileWriteOptions.Inherits}");
             else
                 variables.Add("inherits", "");
 
+            foreach(var val in variables)
+                templateFileData = templateFileData.Replace("{{" + val.Key + "}}", val.Value);
+
+            return templateFileData;
+        }
+
+        private static int DryRun(string filePath, string fileData, string fileDisplayName, FileWriteOptions fileWriteOptions)
+        {
+            if (File.Exists(filePath))
+            {
+                if (fileWriteOptions.UseForce)
+                {
+                    Console.WriteLine($"File exists, would overwrite: {fileDisplayName}");
+                    return Program.Success;
+                }
+                else
+                {
+                    Console.WriteLine($"File exists, wouldn't write: {fileDisplayName}");
+                    return Program.Fail;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Writing file {fileDisplayName}");
+                return Program.Success;
+            }
+        }
+
+        
+
+        private static int WriteFile(string filePath, string fileData, string fileDisplayName, FileWriteOptions fileWriteOptions)
+        {
+            if (File.Exists(filePath))
+            {
+                if (fileWriteOptions.UseForce)
+                {
+                    WriteFile(filePath, fileData);
+                    Console.WriteLine($"File existed, overwritten {fileDisplayName}");
+                    return Program.Success;
+                }
+                else
+                {
+                    Console.WriteLine($"File already exists. Use --force to overwrite");
+                    return Program.Fail;
+                }
+            }
+            else
+            {
+                WriteFile(filePath, fileData);
+                Console.WriteLine($"File created: {fileDisplayName}");
+                return Program.Success;
+            }
+        }
+
+        private static void WriteFile(string filePath, string fileData)
+        {
             string dir = Path.GetDirectoryName(filePath);
             if (Directory.Exists(dir) == false)
                 Directory.CreateDirectory(dir);
 
-            foreach(var val in variables)
-                fileData = fileData.Replace("{{" + val.Key + "}}", val.Value);
-
             File.WriteAllText(filePath, fileData);
-            Console.WriteLine($"Wrote file {relativePath} using the template {schematicName}");
-
-            return Program.Success;
         }
+
+        
     }  
 }

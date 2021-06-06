@@ -95,62 +95,34 @@ namespace DotnetGenerate
                 .SetCurrentWorkingDir(directory.FullName)
                 .SetNamespace(project.RootNamespace)
                 .SetProjectPath(project.ProjectPath)
-                .SetFileNameTransform(schematic.TransformFileName);
+                .SetFileNameTransform(schematic.TransformFileName)
+                .SetInput(InputFileName);
+
+            int writeFileResult = schematic.WriteFile(
+                pathBuilder,
+                new FileWriteOptions()
+                {
+                    Inherits = Inherits,
+                    IsAbtract = IsAbstract,
+                    IsDryRun = DryRun,
+                    IsStatic = IsStatic,
+                    UseForce = Force,
+                    Visibility = Visibility
+                }
+            );
 
             var openCommand = new OpenCommandHandler(OpenCommand)
                 .SetPath(pathBuilder);
 
-            bool cont = CheckFileExists(pathBuilder.FullPath);
-            if (cont == false)
-                return Fail;
-
-            if (DryRun == true)
+            if (writeFileResult == Success && openCommand.HasCommand)
             {
-                Console.WriteLine($"Would write a file to {pathBuilder.RelativePath} using the template {schematic.LongName}");
-
-                if (openCommand.HasCommand)
-                    Console.WriteLine($"Would run this open command: {openCommand.Command}");
-
-                return Success;
-            }
-            else
-            {
-                var writeFileResult = schematic.WriteFile(pathBuilder, Visibility, IsAbstract, IsStatic, Inherits);
-                if (writeFileResult == Success && openCommand.HasCommand)
-                {
-                    if(openCommand.Handle())
-                        return Success;
-                    else
-                        return Fail;
-                }
-                
-                return writeFileResult;
-            }
-        }
-
-        private bool CheckFileExists(string fullPath)
-        {
-            if (File.Exists(fullPath))
-            {
-                if (Force == true)
-                {
-                    if (DryRun == true)
-                        Console.WriteLine("File exists at path, so would be overwritten");
-                    else
-                        File.Delete(fullPath);
-
-                    return true;
-                }
+                if(openCommand.Handle())
+                    return Success;
                 else
-                {
-                    if (DryRun == true)
-                        WriteError("File exists at path, process would stop here");
-                    else
-                        return false;
-                }
+                    return Fail;
             }
             
-            return true;
+            return writeFileResult;
         }
 
         private void WriteError(string error)

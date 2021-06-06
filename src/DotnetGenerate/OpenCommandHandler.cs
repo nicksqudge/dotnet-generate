@@ -31,10 +31,12 @@ namespace DotnetGenerate
             }
         }
 
-        public OpenCommandHandler SetPath(PathBuilderResult path)
+        public OpenCommandHandler SetPath(PathBuilder pathBuilder)
         {
             if (HasCommand == false)
                 return this;
+
+            var path = pathBuilder.Build();
 
             if (Command.Contains("{path}"))
                 Command = Command.Replace("{path}", "\"{path.FullPath}\"");
