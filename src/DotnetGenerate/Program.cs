@@ -9,6 +9,9 @@ namespace DotnetGenerate
     [HelpOption]
     public class Program
     {
+        internal static int Success = 0;
+        internal static int Fail = 1;
+
         public static void Main(string[] args)
             => CommandLineApplication.Execute<Program>(args);
 
@@ -39,6 +42,9 @@ namespace DotnetGenerate
         [Option("-i|--inherits", Description = "Provide the inheritance data")]
         public string Inherits { get; set; } = string.Empty;
 
+        [Option("-o|--open", Description = "Run open command after creating file")]
+        public string OpenCommand { get; set; } = string.Empty;
+
         private List<Schematic> _schematics = new List<Schematic>()
         {
             new Schematics.ClassSchematic(),
@@ -53,7 +59,7 @@ namespace DotnetGenerate
                 if (ListSchematics == true)
                 {
                     ShowSchematics();
-                    return 0;
+                    return Success;
                 }
 
                 return WriteFile();
@@ -92,58 +98,35 @@ namespace DotnetGenerate
                 .SetFileNameTransform(schematic.TransformFileName)
                 .Run(InputName);
 
+            var openCommand = new OpenCommandHandler(OpenCommand)
+                .SetPath(path);
+
             bool cont = CheckFileExists(path.FullPath);
             if (cont == false)
-                return 0;
+                return Fail;
 
             if (DryRun == true)
             {
                 Console.WriteLine($"Would write a file to {path.RelativePath} using the template {schematic.LongName}");
-                return 0;
+
+                if (openCommand.HasCommand)
+                    Console.WriteLine($"Would run this open command: {openCommand.Command}");
+
+                return Success;
             }
             else
             {
-                return WriteFile(schematic, path);
+                var writeFileResult = schematic.WriteFile(path, Visibility, IsAbstract, IsStatic, Inherits);
+                if (writeFileResult == Success && openCommand.HasCommand)
+                {
+                    if(openCommand.Handle())
+                        return Success;
+                    else
+                        return Fail;
+                }
+                
+                return writeFileResult;
             }
-        }
-
-        private int WriteFile(Schematic schematic, PathHandlerResult path)
-        {
-            var variables = new Dictionary<string, string>();
-            variables.Add("name", Path.GetFileNameWithoutExtension(path.FullPath));
-            variables.Add("namespace", path.Namespace);
-
-            var modifiers = new List<string>();
-
-            if (Visibility.HasValue())
-                modifiers.Add(Visibility);
-
-            if (IsAbstract == true)
-                modifiers.Add("abstract");
-
-            if (IsStatic == true)
-                modifiers.Add("static");
-
-            if (modifiers.Any() == false)
-                variables.Add("modifiers", "");
-            else
-                variables.Add("modifiers", string.Join(" ", modifiers) + " ");
-
-            if (Inherits.HasValue())
-                variables.Add("inherits", $" : {Inherits}");
-            else
-                variables.Add("inherits", "");
-
-            string fileData = schematic.TransformTemplate(variables);
-
-            string dir = Path.GetDirectoryName(path.FullPath);
-            if (Directory.Exists(dir) == false)
-                Directory.CreateDirectory(dir);
-
-            File.WriteAllText(path.FullPath, fileData);
-            Console.WriteLine($"Wrote file {path.RelativePath} using the template {schematic.LongName}");
-
-            return 0;
         }
 
         private bool CheckFileExists(string fullPath)
@@ -182,7 +165,7 @@ namespace DotnetGenerate
         private int ReturnError(string error)
         {
             WriteError(error);
-            return 1;
+            return Fail;
         }
 
         private Schematic FindSchematic()
@@ -198,5 +181,6 @@ namespace DotnetGenerate
             else
                 return null;
         }
+
     }
 }

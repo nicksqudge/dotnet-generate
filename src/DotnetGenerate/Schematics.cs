@@ -7,22 +7,28 @@ namespace DotnetGenerate
     {
         public abstract string LongName { get; } 
         public abstract string ShortName { get; }
+        public abstract string Description { get; }
 
         public virtual string TransformFileName(string fileNameWithoutExtension)
         {
             return fileNameWithoutExtension+".cs";
         }
 
-        protected abstract string Template();
+        public abstract string Template();
 
-        public string TransformTemplate(Dictionary<string, string> values)
+        public virtual int WriteFile(PathHandlerResult path, string visibility, bool isAbstract, bool isStatic, string inherits)
         {
-            string template = Template();
-
-            foreach(var val in values)
-                template = template.Replace("{{" + val.Key + "}}", val.Value);
-
-            return template;
+            return FileWriter.Write(
+                fileData: Template(),
+                schematicName: LongName,
+                filePath: path.FullPath,
+                namespaceValue: path.Namespace,
+                relativePath: path.RelativePath,
+                visibility,
+                isAbstract,
+                isStatic,
+                inherits
+            );
         }
     }
 }

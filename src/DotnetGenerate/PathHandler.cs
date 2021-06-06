@@ -11,6 +11,7 @@ namespace DotnetGenerate
         private string _nameSpaceStartName = string.Empty;
         private string _currentWorkingDir = string.Empty;
         private Func<string, string> _fileNameTransformer;
+        private string _preTransformFileName = string.Empty;
 
         public PathHandler SetProjectPath(string projectPath)
         {
@@ -61,7 +62,8 @@ namespace DotnetGenerate
             {
                 FullPath = fullPath,
                 RelativePath = relativePath,
-                Namespace = nameSpaceValue
+                Namespace = nameSpaceValue,
+                OriginalFileName = _preTransformFileName
             };
         }
 
@@ -73,6 +75,7 @@ namespace DotnetGenerate
             string directory = GetParentDirectory(fullPath);
             string fileName = Path.GetFileNameWithoutExtension(fullPath);
 
+            _preTransformFileName = fileName;
             if (_fileNameTransformer != null)
                 fileName = _fileNameTransformer(fileName);
             else
@@ -141,12 +144,5 @@ namespace DotnetGenerate
 
         private string JoinFilePath(string[] path)
             => string.Join("/", path);
-    }
-
-    public class PathHandlerResult
-    {
-        public string RelativePath { get; set; }
-        public string FullPath { get; set; }
-        public string Namespace { get; set; }
     }
 }

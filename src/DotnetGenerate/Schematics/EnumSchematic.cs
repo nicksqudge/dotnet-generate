@@ -9,6 +9,8 @@ namespace DotnetGenerate.Schematics
 
         public override string ShortName => "e";
 
+        public override string Description => "Create a C# Enum";
+
         protected override string Template()
         {
             return @"using System;

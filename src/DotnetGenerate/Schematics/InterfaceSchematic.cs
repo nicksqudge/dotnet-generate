@@ -8,6 +8,8 @@ namespace DotnetGenerate.Schematics
 
         public override string ShortName => "i";
 
+        public override string Description => "Create a C# Interface";
+
         public override string TransformFileName(string fileNameWithoutExtension)
         {
             return $"I{fileNameWithoutExtension}.cs";
