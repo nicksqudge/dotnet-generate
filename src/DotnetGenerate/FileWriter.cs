@@ -7,18 +7,65 @@ namespace DotnetGenerate
 {
     public class FileWriter
     {
+        private PathBuilder _pathBuilder;
+        private Schematic _schematic;
+        private FileWriteOptions _fileWriteOptions;
+        private OpenCommandHandler _openCommand;
+
+        public FileWriter()
+        {
+            _fileWriteOptions = new FileWriteOptions();
+        }
+
+        public FileWriter SetPathBuilder(PathBuilder pathBuilder)
+        {
+            _pathBuilder = pathBuilder;
+            return this;
+        }
+
+        public FileWriter SetSchematic(Schematic schematic)
+        {
+            _schematic = schematic;
+            return this;
+        }
+
+        public FileWriter SetAbstract()
+        {
+            _fileWriteOptions.IsAbtract = true;
+            return this;
+        }
+
+        public FileWriter SetStatic()
+        {
+            _fileWriteOptions.IsStatic = true;
+            return this;
+        }
+
+        public FileWriter SetVisibility(string visibility)
+        {
+            _fileWriteOptions.Visibility = visibility;
+            return this;
+        }
+
+        public FileWriter SetDryRun()
+        {
+            _fileWriteOptions.IsDryRun = true;
+            return this;
+        }
+
+        public FileWriter SetOpenCommand(OpenCommandHandler openCommand)
+        {
+            _openCommand = openCommand;
+            return this;
+        }
+
         public static int Write(
             string fileData,
             string schematicName,
-            string filePath,
-            string namespaceValue,
-            string relativePath,
-            string visibility,
-            bool isAbstract,
-            bool isStatic,
-            string inherits
+            PathBuilder pathHandler,
+            FileWriteOptions options
         )
-        {
+        { 
             var variables = new Dictionary<string, string>();
             variables.Add("name", Path.GetFileNameWithoutExtension(filePath));
             variables.Add("namespace", namespaceValue);

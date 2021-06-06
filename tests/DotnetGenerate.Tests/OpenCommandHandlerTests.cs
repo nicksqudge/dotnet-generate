@@ -11,7 +11,7 @@ namespace DotnetGenerate.Tests
         public void HandleNoValue()
         {
             var handler = new OpenCommandHandler("")
-                .SetPath(new PathHandlerResult()
+                .SetPath(new PathBuilderResult()
                 {
                     FullPath = "/Project/FilePath.cs"
                 });
@@ -24,7 +24,7 @@ namespace DotnetGenerate.Tests
         public void HandleValueNoPath()
         {
             var handler = new OpenCommandHandler("code")
-                .SetPath(new PathHandlerResult()
+                .SetPath(new PathBuilderResult()
                 {
                     FullPath = "/Project/FilePath.cs"
                 });
@@ -37,7 +37,7 @@ namespace DotnetGenerate.Tests
         public void HandleValueWithPath()
         {
             var handler = new OpenCommandHandler("open-this {path} something")
-                .SetPath(new PathHandlerResult()
+                .SetPath(new PathBuilderResult()
                 {
                     FullPath = "/Project/FilePath.cs"
                 });

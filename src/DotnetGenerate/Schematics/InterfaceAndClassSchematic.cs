@@ -17,7 +17,7 @@ namespace DotnetGenerate.Schematics
             throw new NotImplementedException();
         }
 
-        public override int WriteFile(PathHandlerResult path, string visibility, bool isAbstract, bool isStatic, string inherits)
+        public override int WriteFile(PathBuilderResult path, string visibility, bool isAbstract, bool isStatic, string inherits)
         {
             var interfaceSchematic = new InterfaceSchematic();
             var interfaceResult = FileWriter.Write(

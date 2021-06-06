@@ -16,14 +16,13 @@ namespace DotnetGenerate
 
         public abstract string Template();
 
-        public virtual int WriteFile(PathHandlerResult path, string visibility, bool isAbstract, bool isStatic, string inherits)
+        public virtual int WriteFile(PathBuilder pathBuilder, FileWriteOptions fileWriteOptions, OpenCommandHandler openCommandHandler)
         {
+            pathBuilder.SetFileNameTransform(TransformFileName);
+
             return FileWriter.Write(
                 fileData: Template(),
                 schematicName: LongName,
-                filePath: path.FullPath,
-                namespaceValue: path.Namespace,
-                relativePath: path.RelativePath,
                 visibility,
                 isAbstract,
                 isStatic,

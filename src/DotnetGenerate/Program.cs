@@ -19,7 +19,7 @@ namespace DotnetGenerate
         public string Schematic { get; set; }
 
         [Argument(1, Description = "The name of the file, you can also include the path. Use ./ for the root of the csproj")]
-        public string InputName { get; set; }
+        public string InputFileName { get; set; }
 
         [Option("-d|--dry-run", Description = "Run through and reports activity without writing out results")]
         public bool DryRun { get; set; } = false;
@@ -91,23 +91,22 @@ namespace DotnetGenerate
             if (schematic == null)
                 ReturnError($"Could not find a schematic for {Schematic}");
 
-            var path = new PathHandler()
+            var pathBuilder = new PathBuilder()
                 .SetCurrentWorkingDir(directory.FullName)
                 .SetNamespace(project.RootNamespace)
                 .SetProjectPath(project.ProjectPath)
-                .SetFileNameTransform(schematic.TransformFileName)
-                .Run(InputName);
+                .SetFileNameTransform(schematic.TransformFileName);
 
             var openCommand = new OpenCommandHandler(OpenCommand)
-                .SetPath(path);
+                .SetPath(pathBuilder);
 
-            bool cont = CheckFileExists(path.FullPath);
+            bool cont = CheckFileExists(pathBuilder.FullPath);
             if (cont == false)
                 return Fail;
 
             if (DryRun == true)
             {
-                Console.WriteLine($"Would write a file to {path.RelativePath} using the template {schematic.LongName}");
+                Console.WriteLine($"Would write a file to {pathBuilder.RelativePath} using the template {schematic.LongName}");
 
                 if (openCommand.HasCommand)
                     Console.WriteLine($"Would run this open command: {openCommand.Command}");
@@ -116,7 +115,7 @@ namespace DotnetGenerate
             }
             else
             {
-                var writeFileResult = schematic.WriteFile(path, Visibility, IsAbstract, IsStatic, Inherits);
+                var writeFileResult = schematic.WriteFile(pathBuilder, Visibility, IsAbstract, IsStatic, Inherits);
                 if (writeFileResult == Success && openCommand.HasCommand)
                 {
                     if(openCommand.Handle())

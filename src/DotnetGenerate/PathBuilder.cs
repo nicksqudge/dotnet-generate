@@ -5,15 +5,16 @@ using System.Linq;
 
 namespace DotnetGenerate
 {
-    public class PathHandler
+    public class PathBuilder
     {
         private string _projectDirectory = string.Empty;
         private string _nameSpaceStartName = string.Empty;
         private string _currentWorkingDir = string.Empty;
         private Func<string, string> _fileNameTransformer;
         private string _preTransformFileName = string.Empty;
+        private string _userInput = string.Empty;
 
-        public PathHandler SetProjectPath(string projectPath)
+        public PathBuilder SetProjectPath(string projectPath)
         {
             _projectDirectory = GetParentDirectory(projectPath) + "/";
 
@@ -23,42 +24,48 @@ namespace DotnetGenerate
             return this;
         }
 
-        public PathHandler SetFileNameTransform(Func<string, string> transformer)
+        public PathBuilder SetFileNameTransform(Func<string, string> transformer)
         {
             _fileNameTransformer = transformer;
             return this;
         }
 
-        public PathHandler SetCurrentWorkingDir(string cwd)
+        public PathBuilder SetCurrentWorkingDir(string cwd)
         {
             _currentWorkingDir = cwd;
             return this;
         }
 
-        public PathHandler SetNamespace(string ns)
+        public PathBuilder SetNamespace(string ns)
         {
             _nameSpaceStartName = ns;
             return this;
         }
 
-        public PathHandlerResult Run(string userInput)
+        public PathBuilder SetInput(string userInput)
+        {
+            _userInput = userInput;
+            return this;
+        }
+
+        public PathBuilderResult Build()
         {
             string startingDirectory = _projectDirectory;
             if (_currentWorkingDir.HasValue())
                 startingDirectory = _currentWorkingDir;
 
-            if (userInput.StartsWith("./"))
+            if (_userInput.StartsWith("./"))
             {
                 startingDirectory = _projectDirectory;
-                userInput = userInput.Replace("./", "");
+                _userInput = _userInput.Replace("./", "");
             }
 
-            string fullPath = BuildFullPath(startingDirectory, userInput);
+            string fullPath = BuildFullPath(startingDirectory, _userInput);
             string projectParent = GetParentDirectory(_projectDirectory) + "/";
             string relativePath = fullPath.Replace(projectParent, "./");
             string nameSpaceValue = GenerateNameSpace(relativePath);
 
-            return new PathHandlerResult()
+            return new PathBuilderResult()
             {
                 FullPath = fullPath,
                 RelativePath = relativePath,

@@ -1,6 +1,6 @@
 namespace DotnetGenerate
 {
-    public class PathHandlerResult
+    public class PathBuilderResult
     {
         public string RelativePath { get; set; }
         public string FullPath { get; set; }

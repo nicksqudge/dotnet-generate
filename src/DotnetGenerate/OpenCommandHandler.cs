@@ -31,7 +31,7 @@ namespace DotnetGenerate
             }
         }
 
-        public OpenCommandHandler SetPath(PathHandlerResult path)
+        public OpenCommandHandler SetPath(PathBuilderResult path)
         {
             if (HasCommand == false)
                 return this;
