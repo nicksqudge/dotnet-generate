@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics.X86;
 using System;
 using FluentAssertions;
 using Xunit;
@@ -9,130 +10,148 @@ namespace DotnetGenerate.Tests
         [Fact]
         public void GetPathForFileInProjectRoot()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
-                .Run("ExampleClass");
+                .SetInput("ExampleClass")
+                .Build();
 
-            result.RelativePath.Should().Be("./ExampleClass.cs");
-            result.FullPath.Should().Be(@"/Test/TestProject/ExampleClass.cs");
+            result.RelativePath.Should().Be("./");
+            result.Directory.Should().Be(@"/Test/TestProject/");
             result.Namespace.Should().Be("TestProject");
+            result.FileName.Should().Be("ExampleClass");
         }
 
         [Fact]
         public void GetPathForInputWithinChildFolderOfRoot()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
-                .Run("something/ExampleClass");
+                .SetInput("something/ExampleClass")
+                .Build();
 
-            result.RelativePath.Should().Be("./something/ExampleClass.cs");
-            result.FullPath.Should().Be("/Test/TestProject/something/ExampleClass.cs");
+            result.RelativePath.Should().Be("./something/");
+            result.Directory.Should().Be("/Test/TestProject/something/");
             result.Namespace.Should().Be("TestProject.something");
+            result.FileName.Should().Be("ExampleClass");
         }
 
         [Fact]
         public void CreateFileFromCWDChildOfProject()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
                 .SetCurrentWorkingDir("/Test/TestProject/Child")
-                .Run("AnotherExample");
+                .SetInput("AnotherExample")
+                .Build();
 
-            result.RelativePath.Should().Be("./Child/AnotherExample.cs");
-            result.FullPath.Should().Be("/Test/TestProject/Child/AnotherExample.cs");
+            result.RelativePath.Should().Be("./Child/");
+            result.Directory.Should().Be("/Test/TestProject/Child/");
             result.Namespace.Should().Be("TestProject.Child");
+            result.FileName.Should().Be("AnotherExample");
         }
 
         [Fact]
         public void CreateFileWithDoubleFolders()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
-                .Run("Child1/Child2/Batman.cs");
+                .SetInput("Child1/Child2/Batman.cs")
+                .Build();
 
-            result.RelativePath.Should().Be("./Child1/Child2/Batman.cs");
-            result.FullPath.Should().Be("/Test/TestProject/Child1/Child2/Batman.cs");
+            result.RelativePath.Should().Be("./Child1/Child2/");
+            result.Directory.Should().Be("/Test/TestProject/Child1/Child2/");
             result.Namespace.Should().Be("TestProject.Child1.Child2");
+            result.FileName.Should().Be("Batman");
         }
 
         [Fact]
         public void ProvideNamespaceForPath()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
                 .SetNamespace("DotnetGen")
-                .Run("Example");
+                .SetInput("Example")
+                .Build();
 
-            result.RelativePath.Should().Be("./Example.cs");
-            result.FullPath.Should().Be("/Test/TestProject/Example.cs");
+            result.RelativePath.Should().Be("./");
+            result.Directory.Should().Be("/Test/TestProject/");
             result.Namespace.Should().Be("DotnetGen");
+            result.FileName.Should().Be("Example");
         }
 
         [Fact]
         public void ProvideNamespaceForChildFolders()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
                 .SetNamespace("DotnetGen")
-                .Run("Shotgun/Something");  
+                .SetInput("Shotgun/Something")
+                .Build();  
 
-            result.RelativePath.Should().Be("./Shotgun/Something.cs");
-            result.FullPath.Should().Be("/Test/TestProject/Shotgun/Something.cs");
+            result.RelativePath.Should().Be("./Shotgun/");
+            result.Directory.Should().Be("/Test/TestProject/Shotgun/");
             result.Namespace.Should().Be("DotnetGen.Shotgun");
+            result.FileName.Should().Be("Something");
         }
 
         [Fact]
         public void AddInRelativePath()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
                 .SetCurrentWorkingDir("/Test/TestProject/Something")
-                .Run("../Team/Example");
+                .SetInput("../Team/Example")
+                .Build();
 
-            result.RelativePath.Should().Be("./Team/Example.cs");
-            result.FullPath.Should().Be("/Test/TestProject/Team/Example.cs");
+            result.RelativePath.Should().Be("./Team/");
+            result.Directory.Should().Be("/Test/TestProject/Team/");
             result.Namespace.Should().Be("TestProject.Team");
+            result.FileName.Should().Be("Example");
         }
 
         [Fact]
         public void AddInExtraRelativePath()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
                 .SetCurrentWorkingDir("/Test/TestProject/Dawn/Of/The/Dead")
-                .Run("../../Team/Example");
+                .SetInput("../../Team/Example")
+                .Build();
 
-            result.RelativePath.Should().Be("./Dawn/Of/Team/Example.cs");
-            result.FullPath.Should().Be("/Test/TestProject/Dawn/Of/Team/Example.cs");
+            result.RelativePath.Should().Be("./Dawn/Of/Team/");
+            result.Directory.Should().Be("/Test/TestProject/Dawn/Of/Team/");
             result.Namespace.Should().Be("TestProject.Dawn.Of.Team");
+            result.FileName.Should().Be("Example");
         }
 
         [Fact]
         public void UseRelativePathWhenNotInProjectRoot()
         {
-            var result = new PathHandler()
+            var result = new PathBuilder()
                 .SetProjectPath("/Test/TestProject/TestProject.csproj")
                 .SetCurrentWorkingDir("/Test/TestProject/Love/Is/Love")
-                .Run("./RootTest");
+                .SetInput("./RootTest")
+                .Build();
 
-            result.RelativePath.Should().Be("./RootTest.cs");
-            result.FullPath.Should().Be("/Test/TestProject/RootTest.cs");
+            result.RelativePath.Should().Be("./");
+            result.Directory.Should().Be("/Test/TestProject/");
             result.Namespace.Should().Be("TestProject");
+            result.FileName.Should().Be("RootTest");
         }
 
         [Fact]
-        public void FileNameTransformer()
+        public void NamespaceNotCorrectBug()
         {
-            var result = new PathHandler()
-                .SetProjectPath("/Test/TestProject/TestProject.csproj")
-                .SetFileNameTransform((string input) => {
-                    return "NotTheOriginalFile.cs";
-                })
-                .Run("ExampleClass");
-
-            result.RelativePath.Should().Be("./NotTheOriginalFile.cs");
-            result.FullPath.Should().Be(@"/Test/TestProject/NotTheOriginalFile.cs");
-            result.Namespace.Should().Be("TestProject");
+            var result = new PathBuilder()
+                .SetProjectPath(@"E:\Repos\Worklog\Dependencies\Builders\Builders.csproj")
+                .SetNamespace("OpenApiBuilder")
+                .SetCurrentWorkingDir(@"E:\Repos\Worklog\Dependencies\Builders")
+                .SetInput("ExampleClass")
+                .Build();
+                
+            result.Namespace.Should().Be("OpenApiBuilder");
+            result.RelativePath.Should().Be("./");
+            result.FileName.Should().Be("ExampleClass");
         }
     }
 }

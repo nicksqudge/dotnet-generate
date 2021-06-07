@@ -6,8 +6,9 @@ namespace DotnetGenerate.Schematics
     {
         public override string LongName => "class";
         public override string ShortName => "c";
+        public override string Description => "Create a C# class";
         
-        protected override string Template()
+        public override string Template()
         {
             return @"using System;
 using System.Linq;

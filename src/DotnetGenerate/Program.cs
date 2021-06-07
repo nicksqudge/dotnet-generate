@@ -9,6 +9,9 @@ namespace DotnetGenerate
     [HelpOption]
     public class Program
     {
+        internal static int Success = 0;
+        internal static int Fail = 1;
+
         public static void Main(string[] args)
             => CommandLineApplication.Execute<Program>(args);
 
@@ -16,7 +19,7 @@ namespace DotnetGenerate
         public string Schematic { get; set; }
 
         [Argument(1, Description = "The name of the file, you can also include the path. Use ./ for the root of the csproj")]
-        public string InputName { get; set; }
+        public string InputFileName { get; set; }
 
         [Option("-d|--dry-run", Description = "Run through and reports activity without writing out results")]
         public bool DryRun { get; set; } = false;
@@ -24,8 +27,14 @@ namespace DotnetGenerate
         [Option("-f|--force", Description = "Force overwriting of existing files")]
         public bool Force { get; set; } = false;
 
-        [Option("-v|--visibility", Description = "Set the visibility (public, private, internal) of the class, default is empty")]
-        public string Visibility { get; set; } = string.Empty;
+        [Option("-p|--public", Description = "Set the visibility of the file to public")]
+        public bool IsPublic { get; set; } = true;
+
+        [Option("-pr|--private", Description = "Set the visibility of the file to private")]
+        public bool IsPrivate { get; set; } = false;
+
+        [Option("-in|--internal", Description = "Set the visibility of the file to internal")]
+        public bool IsInternal { get; set; } = false;
 
         [Option("-a|--abstract", Description = "Add the abstract modifier to the file")]
         public bool IsAbstract { get; set; } = false;
@@ -39,11 +48,15 @@ namespace DotnetGenerate
         [Option("-i|--inherits", Description = "Provide the inheritance data")]
         public string Inherits { get; set; } = string.Empty;
 
+        [Option("-o|--open", Description = "Run open command after creating file")]
+        public string OpenCommand { get; set; } = string.Empty;
+
         private List<Schematic> _schematics = new List<Schematic>()
         {
             new Schematics.ClassSchematic(),
             new Schematics.InterfaceSchematic(),
-            new Schematics.EnumSchematic()
+            new Schematics.EnumSchematic(),
+            new Schematics.InterfaceAndClassSchematic()
         };
 
         private int OnExecute(CommandLineApplication application)
@@ -53,7 +66,7 @@ namespace DotnetGenerate
                 if (ListSchematics == true)
                 {
                     ShowSchematics();
-                    return 0;
+                    return Success;
                 }
 
                 return WriteFile();
@@ -69,7 +82,7 @@ namespace DotnetGenerate
             Console.WriteLine("Current supported schematics:");
             foreach (var schematic in _schematics)
             {
-                Console.WriteLine($"{schematic.LongName} or {schematic.ShortName}");
+                Console.WriteLine($"{schematic.LongName} [{schematic.ShortName}] - {schematic.Description}");
             }
         }
         
@@ -85,90 +98,50 @@ namespace DotnetGenerate
             if (schematic == null)
                 ReturnError($"Could not find a schematic for {Schematic}");
 
-            var path = new PathHandler()
+            var path = new PathBuilder()
                 .SetCurrentWorkingDir(directory.FullName)
                 .SetNamespace(project.RootNamespace)
                 .SetProjectPath(project.ProjectPath)
-                .SetFileNameTransform(schematic.TransformFileName)
-                .Run(InputName);
+                .SetInput(InputFileName)
+                .Build();
 
-            bool cont = CheckFileExists(path.FullPath);
-            if (cont == false)
-                return 0;
+            string visibility = "";
+            if (IsPublic)
+                visibility = "public";
+            else if (IsPrivate)
+                visibility = "private";
+            else if (IsInternal)
+                visibility = "internal";
 
-            if (DryRun == true)
-            {
-                Console.WriteLine($"Would write a file to {path.RelativePath} using the template {schematic.LongName}");
-                return 0;
-            }
-            else
-            {
-                return WriteFile(schematic, path);
-            }
-        }
-
-        private int WriteFile(Schematic schematic, PathHandlerResult path)
-        {
-            var variables = new Dictionary<string, string>();
-            variables.Add("name", Path.GetFileNameWithoutExtension(path.FullPath));
-            variables.Add("namespace", path.Namespace);
-
-            var modifiers = new List<string>();
-
-            if (Visibility.HasValue())
-                modifiers.Add(Visibility);
-
-            if (IsAbstract == true)
-                modifiers.Add("abstract");
-
-            if (IsStatic == true)
-                modifiers.Add("static");
-
-            if (modifiers.Any() == false)
-                variables.Add("modifiers", "");
-            else
-                variables.Add("modifiers", string.Join(" ", modifiers) + " ");
-
-            if (Inherits.HasValue())
-                variables.Add("inherits", $" : {Inherits}");
-            else
-                variables.Add("inherits", "");
-
-            string fileData = schematic.TransformTemplate(variables);
-
-            string dir = Path.GetDirectoryName(path.FullPath);
-            if (Directory.Exists(dir) == false)
-                Directory.CreateDirectory(dir);
-
-            File.WriteAllText(path.FullPath, fileData);
-            Console.WriteLine($"Wrote file {path.RelativePath} using the template {schematic.LongName}");
-
-            return 0;
-        }
-
-        private bool CheckFileExists(string fullPath)
-        {
-            if (File.Exists(fullPath))
-            {
-                if (Force == true)
+            string fileName = schematic.WriteFile(
+                path,
+                new FileWriteOptions()
                 {
-                    if (DryRun == true)
-                        Console.WriteLine("File exists at path, so would be overwritten");
-                    else
-                        File.Delete(fullPath);
-
-                    return true;
+                    Inherits = Inherits,
+                    IsAbtract = IsAbstract,
+                    IsDryRun = DryRun,
+                    IsStatic = IsStatic,
+                    UseForce = Force,
+                    Visibility = visibility
                 }
+            );
+
+            var openCommand = new OpenCommandHandler(OpenCommand)
+                .SetPath(path);
+
+            int writeFileResult = Fail;
+            if (fileName.HasValue())
+                writeFileResult = Success;
+
+            if (writeFileResult == Success && openCommand.HasCommand)
+            {
+                if(openCommand.Handle(fileName))
+                    return Success;
                 else
-                {
-                    if (DryRun == true)
-                        WriteError("File exists at path, process would stop here");
-                    else
-                        return false;
-                }
+                    return Fail;
             }
             
-            return true;
+            return writeFileResult;
         }
 
         private void WriteError(string error)
@@ -182,7 +155,7 @@ namespace DotnetGenerate
         private int ReturnError(string error)
         {
             WriteError(error);
-            return 1;
+            return Fail;
         }
 
         private Schematic FindSchematic()
@@ -198,5 +171,6 @@ namespace DotnetGenerate
             else
                 return null;
         }
+
     }
 }
