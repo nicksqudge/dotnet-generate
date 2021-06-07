@@ -27,8 +27,14 @@ namespace DotnetGenerate
         [Option("-f|--force", Description = "Force overwriting of existing files")]
         public bool Force { get; set; } = false;
 
-        [Option("-v|--visibility", Description = "Set the visibility (public, private, internal) of the class, default is empty")]
-        public string Visibility { get; set; } = string.Empty;
+        [Option("-p|--public", Description = "Set the visibility of the file to public")]
+        public bool IsPublic { get; set; } = true;
+
+        [Option("-pr|--private", Description = "Set the visibility of the file to private")]
+        public bool IsPrivate { get; set; } = false;
+
+        [Option("-in|--internal", Description = "Set the visibility of the file to internal")]
+        public bool IsInternal { get; set; } = false;
 
         [Option("-a|--abstract", Description = "Add the abstract modifier to the file")]
         public bool IsAbstract { get; set; } = false;
@@ -49,7 +55,8 @@ namespace DotnetGenerate
         {
             new Schematics.ClassSchematic(),
             new Schematics.InterfaceSchematic(),
-            new Schematics.EnumSchematic()
+            new Schematics.EnumSchematic(),
+            new Schematics.InterfaceAndClassSchematic()
         };
 
         private int OnExecute(CommandLineApplication application)
@@ -75,7 +82,7 @@ namespace DotnetGenerate
             Console.WriteLine("Current supported schematics:");
             foreach (var schematic in _schematics)
             {
-                Console.WriteLine($"{schematic.LongName} or {schematic.ShortName}");
+                Console.WriteLine($"{schematic.LongName} [{schematic.ShortName}] - {schematic.Description}");
             }
         }
         
@@ -91,15 +98,23 @@ namespace DotnetGenerate
             if (schematic == null)
                 ReturnError($"Could not find a schematic for {Schematic}");
 
-            var pathBuilder = new PathBuilder()
+            var path = new PathBuilder()
                 .SetCurrentWorkingDir(directory.FullName)
                 .SetNamespace(project.RootNamespace)
                 .SetProjectPath(project.ProjectPath)
-                .SetFileNameTransform(schematic.TransformFileName)
-                .SetInput(InputFileName);
+                .SetInput(InputFileName)
+                .Build();
 
-            int writeFileResult = schematic.WriteFile(
-                pathBuilder,
+            string visibility = "";
+            if (IsPublic)
+                visibility = "public";
+            else if (IsPrivate)
+                visibility = "private";
+            else if (IsInternal)
+                visibility = "internal";
+
+            string fileName = schematic.WriteFile(
+                path,
                 new FileWriteOptions()
                 {
                     Inherits = Inherits,
@@ -107,16 +122,20 @@ namespace DotnetGenerate
                     IsDryRun = DryRun,
                     IsStatic = IsStatic,
                     UseForce = Force,
-                    Visibility = Visibility
+                    Visibility = visibility
                 }
             );
 
             var openCommand = new OpenCommandHandler(OpenCommand)
-                .SetPath(pathBuilder);
+                .SetPath(path);
+
+            int writeFileResult = Fail;
+            if (fileName.HasValue())
+                writeFileResult = Success;
 
             if (writeFileResult == Success && openCommand.HasCommand)
             {
-                if(openCommand.Handle())
+                if(openCommand.Handle(fileName))
                     return Success;
                 else
                     return Fail;

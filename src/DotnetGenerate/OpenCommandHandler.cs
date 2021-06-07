@@ -14,6 +14,7 @@ namespace DotnetGenerate
         public string Command { get; private set; } = string.Empty;
         private string ProcessFileName = string.Empty;
         private string CommandStart = "";
+        private PathBuilderResult _path;
 
         public OpenCommandHandler(string input)
         {
@@ -31,25 +32,41 @@ namespace DotnetGenerate
             }
         }
 
-        public OpenCommandHandler SetPath(PathBuilder pathBuilder)
+        public OpenCommandHandler SetPath(PathBuilderResult path)
         {
             if (HasCommand == false)
                 return this;
 
-            var path = pathBuilder.Build();
-
-            if (Command.Contains("{path}"))
-                Command = Command.Replace("{path}", "\"{path.FullPath}\"");
-            else
-                Command += $" \"{path.FullPath}\"";
+            _path = path;
 
             return this;
         }
 
-        public bool Handle()
+        public string GetCommand(string fileName)
         {
-            Console.WriteLine($"Executing: {Command}");
-            Process.Start(ProcessFileName, $"{CommandStart} {Command}");
+            if (HasCommand == false)
+                return "";
+
+            string filePath = Path.Combine(_path.Directory, fileName);
+
+            if (Command.Contains("{path}"))
+                return Command.Replace("{path}", $"\"{filePath}\"");
+            else
+                return $"{Command} \"{filePath}\"";
+        }
+
+        public bool Handle(string fileName)
+        {
+            if (HasCommand == false)
+                return false;
+
+            string command = GetCommand(fileName);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                command = command.Replace("/", "\\");
+
+            Console.WriteLine($"Executing: {command}");
+            Process.Start(ProcessFileName, $"{CommandStart} {command}");
             return false;
         }
     }

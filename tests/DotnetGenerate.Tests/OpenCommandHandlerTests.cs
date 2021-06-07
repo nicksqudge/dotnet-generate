@@ -13,11 +13,12 @@ namespace DotnetGenerate.Tests
             var handler = new OpenCommandHandler("")
                 .SetPath(new PathBuilderResult()
                 {
-                    FullPath = "/Project/FilePath.cs"
+                    Directory = "/Project/"
                 });
 
             handler.HasCommand.Should().BeFalse();
-            handler.Command.Should().Be("");
+            handler.GetCommand("something.cs")
+                .Should().Be("");
         }
 
         [Fact]
@@ -26,11 +27,13 @@ namespace DotnetGenerate.Tests
             var handler = new OpenCommandHandler("code")
                 .SetPath(new PathBuilderResult()
                 {
-                    FullPath = "/Project/FilePath.cs"
+                    Directory = "/Project/"
                 });
 
             handler.HasCommand.Should().BeTrue();
-            handler.Command.Should().Be("code /Project/FilePath.cs");
+            handler.GetCommand("FilePath.cs")
+                .Should()
+                .Be("code \"/Project/FilePath.cs\"");
         }
 
         [Fact]
@@ -39,11 +42,13 @@ namespace DotnetGenerate.Tests
             var handler = new OpenCommandHandler("open-this {path} something")
                 .SetPath(new PathBuilderResult()
                 {
-                    FullPath = "/Project/FilePath.cs"
+                    Directory = "/Project/"
                 });
 
             handler.HasCommand.Should().BeTrue();
-            handler.Command.Should().Be("open-this /Project/FilePath.cs something");
+            handler.GetCommand("FilePath.cs")
+                .Should()
+                .Be("open-this \"/Project/FilePath.cs\" something");
         }
     }  
 }

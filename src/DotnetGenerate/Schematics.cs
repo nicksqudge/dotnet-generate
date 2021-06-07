@@ -17,25 +17,28 @@ namespace DotnetGenerate
 
         public abstract string Template();
 
-        public virtual int WriteFile(PathBuilder pathBuilder, FileWriteOptions fileWriteOptions)
+        public virtual string WriteFile(PathBuilderResult path, FileWriteOptions fileWriteOptions)
         {
-            pathBuilder.SetFileNameTransform(TransformFileName);
-
-            var path = pathBuilder.Build();
+            string fileName = TransformFileName(path.FileName);
 
             string fileData = FileWriter.BuildFileData(
-                name: Path.GetFileNameWithoutExtension(path.FullPath),
+                name: Path.GetFileNameWithoutExtension(fileName),
                 namespaceValue: path.Namespace,
                 templateFileData: Template(),
                 fileWriteOptions
             );
 
-            return FileWriter.Write(
-                path.FullPath,
+            int result = FileWriter.Write(
+                filePath: Path.Combine(path.Directory, fileName),
                 fileData,
-                path.RelativePath,
+                fileDisplayName: Path.Combine(path.RelativePath, fileName),
                 fileWriteOptions
             );
+
+            if (result == Program.Fail)
+                return "";
+
+            return fileName;
         }
     }
 }

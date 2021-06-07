@@ -17,23 +17,33 @@ namespace DotnetGenerate.Schematics
             throw new NotImplementedException();
         }
 
-        public override int WriteFile(PathBuilderResult path, string visibility, bool isAbstract, bool isStatic, string inherits)
+        public override string WriteFile(PathBuilderResult path, FileWriteOptions fileWriteOptions)
         {
             var interfaceSchematic = new InterfaceSchematic();
-            var interfaceResult = FileWriter.Write(
-                interfaceSchematic.Template(),
-                interfaceSchematic.LongName,
-                Path.Combine()
+            var interfaceResult = interfaceSchematic.WriteFile(
+                path,
+                new FileWriteOptions()
+                {
+                    Inherits = fileWriteOptions.Inherits,
+                    IsDryRun = fileWriteOptions.IsDryRun,
+                    UseForce = fileWriteOptions.UseForce,
+                    Visibility = fileWriteOptions.Visibility
+                }
             );
-            if (interfaceResult == Program.Fail)
-                return Program.Fail;
-
-            string inheritsValue = interfaceSchematic
-                .TransformFileName(Path.GetFileNameWithoutExtension(path.FullPath))
-                .Replace(".cs", "");
+            if (interfaceResult.HasValue() == false)
+                return "";
 
             var classSchematic = new ClassSchematic();
-            return classSchematic.WriteFile(path, visibility, isAbstract, false, inheritsValue);
+            return classSchematic.WriteFile(
+                path,
+                new FileWriteOptions()
+                {
+                    Inherits = Path.GetFileNameWithoutExtension(interfaceSchematic.TransformFileName(path.FileName)),
+                    IsDryRun = fileWriteOptions.IsDryRun,
+                    UseForce = fileWriteOptions.UseForce,
+                    Visibility = fileWriteOptions.Visibility
+                }
+            );
         }
     }
 }

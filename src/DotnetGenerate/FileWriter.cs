@@ -71,8 +71,6 @@ namespace DotnetGenerate
             }
         }
 
-        
-
         private static int WriteFile(string filePath, string fileData, string fileDisplayName, FileWriteOptions fileWriteOptions)
         {
             if (File.Exists(filePath))
@@ -105,7 +103,5 @@ namespace DotnetGenerate
 
             File.WriteAllText(filePath, fileData);
         }
-
-        
     }  
 }

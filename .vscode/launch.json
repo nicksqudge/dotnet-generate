@@ -11,7 +11,7 @@
       "preLaunchTask": "build",
       // If you have changed target frameworks, make sure to update the program path.
       "program": "${workspaceFolder}/src/DotnetGenerate/bin/Debug/net5.0/dotnet-generate.dll",
-      "args": ["c", "Test.cs", "-o", "code"],
+      "args": ["ic", "Test", "-o", "code"],
       "cwd": "${workspaceFolder}/src/DotnetGenerate",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "internalConsole",
