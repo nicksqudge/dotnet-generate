@@ -5,16 +5,16 @@ using System.Linq;
 
 namespace DotnetGenerate
 {
-    public class PathHandler
+    public class PathBuilder
     {
         private string _projectDirectory = string.Empty;
         private string _nameSpaceStartName = string.Empty;
         private string _currentWorkingDir = string.Empty;
-        private Func<string, string> _fileNameTransformer;
+        private string _userInput = string.Empty;
 
-        public PathHandler SetProjectPath(string projectPath)
+        public PathBuilder SetProjectPath(string projectPath)
         {
-            _projectDirectory = Path.GetDirectoryName(projectPath) + "/";
+            _projectDirectory = GetParentDirectory(projectPath) + "/";
 
             if (_nameSpaceStartName.HasValue() == false)
                 _nameSpaceStartName = Path.GetFileNameWithoutExtension(projectPath);
@@ -22,53 +22,66 @@ namespace DotnetGenerate
             return this;
         }
 
-        public PathHandler SetFileNameTransform(Func<string, string> transformer)
-        {
-            _fileNameTransformer = transformer;
-            return this;
-        }
-
-        public PathHandler SetCurrentWorkingDir(string cwd)
+        public PathBuilder SetCurrentWorkingDir(string cwd)
         {
             _currentWorkingDir = cwd;
             return this;
         }
 
-        public PathHandler SetNamespace(string ns)
+        public PathBuilder SetNamespace(string ns)
         {
             _nameSpaceStartName = ns;
             return this;
         }
 
-        public PathHandlerResult Run(string userInput)
+        public PathBuilder SetInput(string userInput)
+        {
+            _userInput = userInput;
+            return this;
+        }
+
+        public PathBuilderResult Build()
         {
             string startingDirectory = _projectDirectory;
             if (_currentWorkingDir.HasValue())
                 startingDirectory = _currentWorkingDir;
 
-            if (userInput.StartsWith("./"))
+            if (_userInput.StartsWith("./"))
             {
                 startingDirectory = _projectDirectory;
-                userInput = userInput.Replace("./", "");
+                _userInput = _userInput.Replace("./", "");
             }
 
-            string fullPath = BuildFullPath(startingDirectory, userInput);
-            string projectParent = Path.GetDirectoryName(_projectDirectory) + "/";
-            string relativePath = fullPath.Replace(projectParent, "./");
+            var (directory, fileName) = BuildFullPath(startingDirectory, _userInput);
+            string projectParent = GetParentDirectory(_projectDirectory);
+            string relativePath = directory.Replace(projectParent, "./");
             string nameSpaceValue = GenerateNameSpace(relativePath);
 
-            return new PathHandlerResult()
+            return new PathBuilderResult()
             {
-                FullPath = fullPath,
+                Directory = directory,
                 RelativePath = relativePath,
-                Namespace = nameSpaceValue
+                Namespace = nameSpaceValue,
+                FileName = Path.GetFileNameWithoutExtension(fileName)
             };
         }
 
-        private string BuildFullPath(string startingDir, string userInput)
+        private (string Directory, string FileName) BuildFullPath(string startingDir, string userInput)
         {
-            string fullPath = Path.Combine(startingDir, userInput);
+            string fullPath = Path
+                .Combine(startingDir, userInput)
+                .Replace("//", "/");
 
+            fullPath = HandleDirectoryUpCharacter(fullPath);
+
+            string directory = GetParentDirectory(fullPath);
+            string fileName = Path.GetFileNameWithoutExtension(fullPath) + ".cs";
+
+            return (directory, fileName);
+        }
+
+        private string HandleDirectoryUpCharacter(string fullPath)
+        {
             if (fullPath.Contains("../"))
             {
                 var parts = SplitPath(fullPath).ToList();
@@ -91,24 +104,17 @@ namespace DotnetGenerate
                 }
 
                 result.Reverse();
-                fullPath = string.Join("/", result);
+                fullPath = JoinFilePath(result.ToArray());
             }
 
-            string directory = Path.GetDirectoryName(fullPath);
-            string fileName = Path.GetFileNameWithoutExtension(fullPath);
-
-            if (_fileNameTransformer != null)
-                fileName = _fileNameTransformer(fileName);
-            else
-                fileName += ".cs";
-
-            return Path.Combine(directory, fileName);
+            return fullPath;
         }
 
         private string GenerateNameSpace(string relativePath)
         {
             var nameSpaceBlocks = new List<string>();
-            SplitPath(Path.GetDirectoryName(relativePath))
+            string directory = GetParentDirectory(relativePath);
+            SplitPath(directory)
                 .ToList()
                 .ForEach(part =>
                 {
@@ -125,12 +131,23 @@ namespace DotnetGenerate
 
         private string[] SplitPath(string path)
             => path.Split(new string[] { "\\", "/" }, StringSplitOptions.None);
-    }
 
-    public class PathHandlerResult
-    {
-        public string RelativePath { get; set; }
-        public string FullPath { get; set; }
-        public string Namespace { get; set; }
+        private string GetParentDirectory(string path)
+        {
+            var items = SplitPath(path).SkipLast(1);
+            string result = JoinFilePath(items.ToArray());
+            return AddEndSlash(result);
+        }
+
+        private string AddEndSlash(string directory)
+        {
+            if (directory.EndsWith("/") == false)
+                directory += "/";
+
+            return directory;
+        }
+
+        private string JoinFilePath(string[] paths)
+            => string.Join("/", paths);
     }
 }
