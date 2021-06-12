@@ -10,16 +10,24 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:dotnet-generate-vscode.helloWorld"
+    "onCommand:dotnet-generate-vscode.addFile"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "dotnet-generate-vscode.helloWorld",
-        "title": "Hello World"
+        "command": "dotnet-generate-vscode.addFile",
+        "title": "Generate C# File"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "dotnet-generate-vscode.addFile",
+          "group": "dotnet-generate"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
