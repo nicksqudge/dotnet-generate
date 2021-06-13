@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import path = require("path");
-import { exec } from "promisify-child-process";
+import * as cp from "child_process";
 import * as vscode from "vscode";
 
 interface ISchematic {
@@ -9,72 +9,85 @@ interface ISchematic {
   value: string;
 }
 
+function _getFolder(target: vscode.Uri) {
+  if (target) {
+    return target;
+  } else {
+    if (vscode.window.activeTextEditor !== undefined) {
+      return vscode.Uri.parse(
+        path.dirname(vscode.window.activeTextEditor.document.uri.fsPath)
+      );
+    } else if (vscode.workspace.workspaceFolders !== undefined) {
+      return vscode.workspace.workspaceFolders[0].uri;
+    } else {
+      return;
+    }
+  }
+}
+
+async function _pickSchematic() {
+  const schematics: Array<ISchematic> = [
+    {
+      label: "Class",
+      value: "class",
+    },
+    {
+      label: "Interface",
+      value: "interface",
+    },
+    {
+      label: "Enum",
+      value: "enum",
+    },
+    {
+      label: "Interface & Class",
+      value: "interfaceclass",
+    },
+  ];
+
+  return await vscode.window.showQuickPick<ISchematic>(schematics);
+}
+
+async function _runCommand(
+  schematic: ISchematic,
+  folder: vscode.Uri,
+  fileName: string
+) {
+  const command = `dotnet generate ${schematic?.value} ${fileName}`;
+
+  console.log(command);
+  cp.exec(
+    command,
+    {
+      cwd: folder.path,
+    },
+    (err, stdout, stderr) => {
+      console.log("stdout: " + stdout);
+      console.log("stderr: " + stderr);
+      if (err) {
+        console.log("error: " + err);
+      }
+    }
+  );
+}
+
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand(
     "dotnet-generate-vscode.addFile",
     async (target: vscode.Uri) => {
-      let folder: vscode.Uri = vscode.Uri.parse("");
-
-      if (target) {
-        folder = target;
-      } else {
-        if (vscode.window.activeTextEditor !== undefined) {
-          folder = vscode.Uri.parse(
-            path.dirname(vscode.window.activeTextEditor.document.uri.fsPath)
-          );
-        } else if (vscode.workspace.workspaceFolders !== undefined) {
-          folder = vscode.workspace.workspaceFolders[0].uri;
-        } else {
-          return;
-        }
-      }
+      const folder = _getFolder(target);
+      if (!folder) return;
 
       let fileName = await vscode.window.showInputBox({
         placeHolder: "File name",
         prompt: "Please enter file name",
       });
-      if (fileName) {
-        const schematics: Array<ISchematic> = [
-          {
-            label: "Class",
-            value: "class",
-          },
-          {
-            label: "Interface",
-            value: "interface",
-          },
-          {
-            label: "Enum",
-            value: "enum",
-          },
-          {
-            label: "Interface & Class",
-            value: "interfaceclass",
-          },
-        ];
+      if (!fileName) return;
 
-        let schematic = await vscode.window.showQuickPick<ISchematic>(
-          schematics
-        );
+      const schematic = await _pickSchematic();
+      if (!schematic) return;
 
-        if (schematic) {
-          const finalPath = vscode.Uri.joinPath(folder, fileName).fsPath;
-
-          const command = `dotnet generate ${schematic?.value} ${finalPath}`;
-
-          try {
-            const { stdout } = await exec(command);
-            if (stdout) {
-              return stdout.toString("utf8").split(/\r?\n/);
-            } else {
-              return [];
-            }
-            vscode.window.showInformationMessage(command);
-          } catch (e) {
-            vscode.window.showErrorMessage(e.message + e.stdout);
-          }
-        }
-      }
+      await _runCommand(schematic, folder, fileName);
     }
   );
 
