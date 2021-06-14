@@ -11,15 +11,19 @@ interface ISchematic {
 
 function _getFolder(target: vscode.Uri) {
   if (target) {
+    console.log("_getFolder from target");
     return target;
   } else {
     if (vscode.window.activeTextEditor !== undefined) {
+      console.log("_getFolder from activateTextEditor");
       return vscode.Uri.parse(
         path.dirname(vscode.window.activeTextEditor.document.uri.fsPath)
       );
     } else if (vscode.workspace.workspaceFolders !== undefined) {
+      console.log("_getFolder from workspaceFolders");
       return vscode.workspace.workspaceFolders[0].uri;
     } else {
+      console.log("_getFolder no folder found");
       return;
     }
   }
@@ -55,18 +59,19 @@ async function _runCommand(
 ) {
   const command = `dotnet generate ${schematic?.value} ${fileName}`;
 
-  console.log(command);
+  console.log(folder);
+  console.log(folder.path + " " + command);
   cp.exec(
     command,
     {
       cwd: folder.path,
     },
     (err, stdout, stderr) => {
-      console.log("stdout: " + stdout);
-      console.log("stderr: " + stderr);
-      if (err) {
-        console.log("error: " + err);
-      }
+      if (stdout) vscode.window.showInformationMessage(stdout);
+
+      if (stderr) vscode.window.showErrorMessage(stderr);
+
+      if (err) vscode.window.showErrorMessage(err.message);
     }
   );
 }
