@@ -16,31 +16,6 @@
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "internalConsole",
       "stopAtEntry": false
-    },
-    {
-      "name": "Run Extension",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/src/dotnet-generate-vscode/"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/src/dotnet-generate-vscode/dist/**/*.js"
-      ],
-      "preLaunchTask": "${defaultBuildTask}"
-    },
-    {
-      "name": "Extension Tests",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/src/dotnet-generate-vscode/",
-        "--extensionTestsPath=${workspaceFolder}/src/dotnet-generate-vscode/out/test/suite/index"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/src/dotnet-generate-vscode/out/test/**/*.js"
-      ],
-      "preLaunchTask": "npm: test-watch"
     }
   ]
 }

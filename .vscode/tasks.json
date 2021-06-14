@@ -12,35 +12,6 @@
         "/consoleloggerparameters:NoSummary"
       ],
       "problemMatcher": "$msCompile"
-    },
-    {
-      "type": "npm",
-      "script": "watch",
-      "options": {
-        "cwd": "${workspaceFolder}/src/dotnet-generate-vscode/"
-      },
-      "problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
-      "isBackground": true,
-      "presentation": {
-        "reveal": "never"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    },
-    {
-      "type": "npm",
-      "script": "test-watch",
-      "problemMatcher": "$tsc-watch",
-      "options": {
-        "cwd": "${workspaceFolder}/src/dotnet-generate-vscode/"
-      },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "never"
-      },
-      "group": "build"
     }
   ]
 }
