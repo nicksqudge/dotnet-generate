@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/nicksqudge/dotnet-generate"
   },
-  "version": "0.0.1",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.57.0"
   },
@@ -17,7 +17,7 @@
   "activationEvents": [
     "onCommand:dotnet-generate-vscode.addFile"
   ],
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
@@ -43,7 +43,8 @@
     "test-watch": "tsc -watch -p ./",
     "pretest": "npm run test-compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./src/test/runTest.js",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
