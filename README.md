@@ -14,6 +14,10 @@ Run this command to install the [NuGet](https://www.nuget.org/packages/dotnet-ge
 
 The file will be created in the current working directory of where the console is running unless a more specific path is provided.
 
+### Now as visual studio code extension
+
+Check out the extension [here](https://marketplace.visualstudio.com/items?itemName=nicksqudge.dotnet-generate-vscode)
+
 ## Arguments
 
 | Argument    | Description                                                                                                                                                                           | Value Type |
