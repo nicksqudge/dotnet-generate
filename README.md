@@ -42,6 +42,10 @@ Check out the extension [here](https://marketplace.visualstudio.com/items?itemNa
 
 # Change Log
 
+## Version 1.2
+
+- Added support for Unity projects
+
 ## Version 1.1
 
 - Added support for --open command

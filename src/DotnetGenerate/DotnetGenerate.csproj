@@ -5,7 +5,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>dotnet-generate</AssemblyName>
     <PackAsTool>true</PackAsTool>
-    <Version>1.1</Version>
+    <Version>1.2</Version>
     <ToolCommandName>dotnet-generate</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <Description>A dotnet tool for generating files via the dotnet-cli</Description>

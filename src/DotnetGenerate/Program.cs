@@ -9,6 +9,9 @@ namespace DotnetGenerate
     [HelpOption]
     public class Program
     {
+        private readonly IDirectoryHandler _directoryHandler = new DirectoryHandler();
+        private readonly ICsProjectFileReader _csProjectFileReader = new CsProjectFileReader();
+
         internal static int Success = 0;
         internal static int Fail = 1;
 
@@ -90,7 +93,11 @@ namespace DotnetGenerate
         {
             DirectoryInfo directory = new DirectoryInfo(Environment.CurrentDirectory);
 
-            var project = new ProjectFinder().Find(directory);
+            var project = new FindProject(
+                _directoryHandler,
+                _csProjectFileReader
+            ).InDirectory(directory);
+            
             if (project == null)
                 ReturnError("Could not find project file");
 
